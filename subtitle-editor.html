@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>字幕順稿小工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .upload-box {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-box:hover {
+            border-color: #4facfe;
+            background: #f8f9ff;
+        }
+
+        .upload-box.active {
+            border-color: #4facfe;
+            background: #f0f7ff;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            color: #4facfe;
+            margin-bottom: 15px;
+        }
+
+        .upload-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .upload-desc {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: #4facfe;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            background: #3498db;
+            transform: translateY(-2px);
+        }
+
+        .file-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: #e8f5e8;
+            border-radius: 5px;
+            color: #2c5530;
+            display: none;
+        }
+
+        .process-section {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .process-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .process-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .process-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .progress-section {
+            margin: 30px 0;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            color: #666;
+        }
+
+        .result-section {
+            margin-top: 40px;
+            display: none;
+        }
+
+        .preview-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .preview-box {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .preview-header {
+            background: #f8f9fa;
+            padding: 15px;
+            font-weight: bold;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .preview-content {
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .download-section {
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .download-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+
+        .download-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .upload-section, .preview-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 字幕順稿小工具</h1>
+            <p>上傳劇本和字幕文件，自動修正字幕內容</p>
+        </div>
+
+        <div class="main-content">
+            <div class="upload-section">
+                <div class="upload-box" id="scriptUpload">
+                    <div class="upload-icon">📝</div>
+                    <div class="upload-title">上傳劇本文件</div>
+                    <div class="upload-desc">支援 .txt 格式的劇本文件</div>
+                    <button class="upload-btn" onclick="document.getElementById('scriptFile').click()">選擇文件</button>
+                    <input type="file" id="scriptFile" class="file-input" accept=".txt" onchange="handleFileUpload('script', this)">
+                    <div class="file-info" id="scriptInfo"></div>
+                </div>
+
+                <div class="upload-box" id="subtitleUpload">
+                    <div class="upload-icon">💬</div>
+                    <div class="upload-title">上傳字幕文件</div>
+                    <div class="upload-desc">支援 .srt 格式的字幕文件</div>
+                    <button class="upload-btn" onclick="document.getElementById('subtitleFile').click()">選擇文件</button>
+                    <input type="file" id="subtitleFile" class="file-input" accept=".srt" onchange="handleFileUpload('subtitle', this)">
+                    <div class="file-info" id="subtitleInfo"></div>
+                </div>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+
+            <div class="process-section">
+                <button class="process-btn" id="processBtn" onclick="processFiles()" disabled>
+                    ✨ 開始處理字幕
+                </button>
+            </div>
+
+            <div class="progress-section" id="progressSection">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">處理中...</div>
+            </div>
+
+            <div class="result-section" id="resultSection">
+                <div class="preview-container">
+                    <div class="preview-box">
+                        <div class="preview-header">原始字幕</div>
+                        <div class="preview-content" id="originalPreview"></div>
+                    </div>
+                    <div class="preview-box">
+                        <div class="preview-header">修正後字幕</div>
+                        <div class="preview-content" id="correctedPreview"></div>
+                    </div>
+                </div>
+
+                <div class="download-section">
+                    <button class="download-btn" onclick="downloadCorrectedSubtitle()">
+                        ⬇️ 下載修正後字幕
+                    </button>
+                    <button class="download-btn" onclick="downloadReport()">
+                        📊 下載修正報告
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let scriptContent = '';
+        let subtitleContent = '';
+        let originalSubtitles = [];
+        let correctedSubtitles = [];
+        let correctionReport = [];
+
+        function handleFileUpload(type, input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (type === 'script') {
+                    scriptContent = e.target.result;
+                    document.getElementById('scriptInfo').style.display = 'block';
+                    document.getElementById('scriptInfo').textContent = `已上傳: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                    document.getElementById('scriptUpload').classList.add('active');
+                } else if (type === 'subtitle') {
+                    subtitleContent = e.target.result;
+                    document.getElementById('subtitleInfo').style.display = 'block';
+                    document.getElementById('subtitleInfo').textContent = `已上傳: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                    document.getElementById('subtitleUpload').classList.add('active');
+                }
+                
+                checkFilesReady();
+            };
+            reader.readAsText(file, 'utf-8');
+        }
+
+        function checkFilesReady() {
+            const processBtn = document.getElementById('processBtn');
+            if (scriptContent && subtitleContent) {
+                processBtn.disabled = false;
+                processBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            }
+        }
+
+        function showMessage(message, type) {
+            const errorEl = document.getElementById('errorMessage');
+            const successEl = document.getElementById('successMessage');
+            
+            errorEl.style.display = 'none';
+            successEl.style.display = 'none';
+            
+            if (type === 'error') {
+                errorEl.textContent = message;
+                errorEl.style.display = 'block';
+            } else {
+                successEl.textContent = message;
+                successEl.style.display = 'block';
+            }
+        }
+
+        function updateProgress(percent, text) {
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressText').textContent = text;
+        }
+
+        function parseSRTSubtitles(srtContent) {
+            const subtitles = [];
+            const blocks = srtContent.trim().split(/\n\s*\n/);
+            
+            blocks.forEach((block, index) => {
+                const lines = block.trim().split('\n');
+                if (lines.length >= 3) {
+                    const id = lines[0];
+                    const timeRange = lines[1];
+                    const text = lines.slice(2).join('\n');
+                    
+                    subtitles.push({
+                        id: id,
+                        timeRange: timeRange,
+                        text: text.trim()
+                    });
+                }
+            });
+            
+            return subtitles;
+        }
+
+        function generateSRTContent(subtitles) {
+            return subtitles.map(sub => {
+                return `${sub.id}\n${sub.timeRange}\n${sub.text}\n`;
+            }).join('\n');
+        }
+
+        // 更完整的中文同音字對照表和常見錯誤
+        const chinesePronunciationMap = {
+            '蘇': ['素', '酥', '甦', '俗', '肅', '蘇秦', '抒情'],
+            '晴': ['琴', '情', '青', '清', '請', '輕', '秦', '晴朗'],
+            '偉': ['為', '威', '微', '衛', '偉大', '危', '位'],
+            '寂': ['記', '寄', '際', '濟'],
+            '熾': ['致', '質', '智'],
+            '劑': ['際', '濟', '記'],
+            '墜': ['追', '墮'],
+            '嘶': ['思', '司', '絲'],
+            '融': ['容', '榮'],
+            '匯': ['會', '慧'],
+            '聖': ['生', '聲', '升'],
+            '衛': ['位', '為', '危'],
+            '褻': ['謝', '血', '泄'],
+            '瀆': ['讀', '獨', '毒'],
+            '槍': ['強', '搶', '牆'],
+            '撕': ['思', '私', '司'],
+            '屠': ['圖', '土', '途'],
+            '脆': ['翠', '粹', '醉'],
+            '潔': ['結', '節', '傑'],
+            '崩': ['蹦', '繃', '朋'],
+            '塌': ['踏', '答', '達'],
+            '噴': ['盆', '奔', '本'],
+            '熔': ['融', '榮', '容'],
+            '窟': ['骨', '古', '故'],
+            '窿': ['龍', '農', '弄']
+        };
+
+        // 提取劇本中的關鍵詞（人名、地名等專有名詞）
+        function extractKeywords(scriptContent) {
+            const keywords = new Set();
+            const lines = scriptContent.split('\n');
+            
+            // 尋找常見人名模式
+            const namePatterns = [
+                /([一-龯]{2,3})(?=說|道|講|問|答|回|笑|哭|叫)/g,  // 人名+動作
+                /([一-龯]{2,3})：/g,  // 對話格式中的人名
+                /「([一-龯]{2,3})」/g  // 引號中的人名
+            ];
+            
+            lines.forEach(line => {
+                namePatterns.forEach(pattern => {
+                    const matches = line.matchAll(pattern);
+                    for (const match of matches) {
+                        if (match[1] && match[1].length >= 2) {
+                            keywords.add(match[1]);
+                        }
+                    }
+                });
+                
+                // 也添加整個句子作為參考
+                if (line.trim().length > 3) {
+                    keywords.add(line.trim());
+                }
+            });
+            
+            return Array.from(keywords);
+        }
+
+        // 新的匹配策略：字符級替換
+        function findBestMatch(text, scriptLines) {
+            const scriptText = scriptLines.join('');
+            
+            // 第一步：字符級錯誤修正
+            let correctedText = correctCommonErrors(text);
+            
+            // 第二步：在劇本中找最佳匹配片段
+            let bestMatch = findBestSubstring(correctedText, scriptText);
+            
+            // 第三步：如果沒找到好的匹配，嘗試句子級匹配
+            if (!bestMatch || bestMatch === correctedText) {
+                bestMatch = findBestSentenceMatch(correctedText, scriptLines);
+            }
+            
+            return bestMatch || text;
+        }
+
+        // 修正常見錯誤字符
+        function correctCommonErrors(text) {
+            let corrected = text;
+            
+            // 處理常見的語音識別錯誤
+            const commonErrors = {
+                '蘇秦': '蘇晴',
+                '抒情': '蘇晴', 
+                '高危': '高偉',
+                '高位': '高偉',
+                '死記': '死寂',
+                '清潔': '晴姐',
+                '請解': '晴姐',
+                '素琴': '蘇晴',
+                '身位': '聖衛',
+                '順位': '聖衛',
+                '神跡者': '神啟者',
+                '男孩': '哪還',
+                '裝備精餾': '裝備精良',
+                'angel': '天使',
+                '項目': '橡木',
+                '翹所': '撬鎖',
+                '情節': '晴姐',
+                '思思生': '嘶嘶聲',
+                '辣一樣': '蠟一樣',
+                '哄': '轟',
+                '帶對': '帶隊',
+                '正經': '震驚',
+                '神之門': '神之門',
+                '無緣倫比': '無與倫比',
+                '受持靈兵器': '手持冷兵器',
+                '從樂出': '衝了出',
+                '神主的怒活': '聖主的怒火',
+                '許高危': '是高偉',
+                '答答答答': '噠噠噠噠',
+                '強強的': '響徹了',
+                '磨到護氣': '現代火器',
+                '同意張紙': '同一張紙',
+                '當下': '擋下',
+                '錄一個': '又一個',
+                '聖味': '聖衛',
+                '去帶了': '取代了',
+                '身位': '聖衛',
+                '神跡者': '神啟者',
+                '徐虎欺神': '神乎其神',
+                '造成德': '趙承德',
+                '已全': '一群',
+                '第一聲': '低聲',
+                '環': '慌亂',
+                '底柱': '底座',
+                '煩人': '凡人',
+                '看懂': '看頭',
+                '神職': '神之',
+                '高危': '高偉',
+                '第一面': '地面',
+                '花蔭已落': '話音剛落',
+                '他們': '大廳',
+                '步道台': '佈道台',
+                '第一下': '地下',
+                '折上來': '升了上來',
+                '聲音': '身影',
+                '那邊臉': '半邊臉',
+                '食指': '十指',
+                '利潤': '利刃',
+                '思吼': '嘶吼',
+                '師生驚呼': '失聲驚呼',
+                '所情': '蘇晴',
+                '眼同': '瞳孔',
+                '八壓感': '壓迫感',
+                '沙鹿兵器': '殺戮兵器',
+                '想搶了': '響徹在',
+                '言語': '威嚴',
+                '電子煙': '電子音'
+            };
+            
+            // 替換常見錯誤
+            for (const [wrong, correct] of Object.entries(commonErrors)) {
+                corrected = corrected.replace(new RegExp(wrong, 'g'), correct);
+            }
+            
+            return corrected;
+        }
+
+        // 在劇本中尋找最佳匹配的子字符串
+        function findBestSubstring(text, scriptText) {
+            const textLength = text.length;
+            let bestMatch = '';
+            let bestScore = 0;
+            
+            // 使用滑動窗口在劇本中搜索
+            for (let i = 0; i <= scriptText.length - textLength; i++) {
+                const substring = scriptText.substring(i, i + textLength);
+                const score = calculateSimilarity(text, substring);
+                
+                if (score > bestScore && score > 0.8) {
+                    bestScore = score;
+                    bestMatch = substring;
+                }
+            }
+            
+            // 也嘗試稍長和稍短的窗口
+            const variations = [textLength - 2, textLength - 1, textLength + 1, textLength + 2];
+            for (const len of variations) {
+                if (len <= 0) continue;
+                
+                for (let i = 0; i <= scriptText.length - len; i++) {
+                    const substring = scriptText.substring(i, i + len);
+                    const score = calculateSimilarity(text, substring);
+                    
+                    if (score > bestScore && score > 0.75) {
+                        bestScore = score;
+                        bestMatch = substring;
+                    }
+                }
+            }
+            
+            return bestMatch;
+        }
+
+        // 句子級匹配（作為後備方案）
+        function findBestSentenceMatch(text, scriptLines) {
+            let bestMatch = '';
+            let bestScore = 0;
+            
+            for (const line of scriptLines) {
+                if (line.trim().length === 0) continue;
+                
+                // 檢查文本是否包含在句子中
+                if (line.includes(text)) {
+                    return text; // 如果劇本包含這個文本，直接返回
+                }
+                
+                const score = calculateSimilarity(text, line);
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMatch = line.trim();
+                }
+            }
+            
+            return bestScore > 0.6 ? bestMatch : text;
+        }
+
+        function calculateSimilarity(str1, str2) {
+            const len1 = str1.length;
+            const len2 = str2.length;
+            
+            if (len1 === 0) return len2 === 0 ? 1 : 0;
+            if (len2 === 0) return 0;
+            
+            const matrix = Array(len1 + 1).fill().map(() => Array(len2 + 1).fill(0));
+            
+            for (let i = 0; i <= len1; i++) matrix[i][0] = i;
+            for (let j = 0; j <= len2; j++) matrix[0][j] = j;
+            
+            for (let i = 1; i <= len1; i++) {
+                for (let j = 1; j <= len2; j++) {
+                    const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j] + 1,
+                        matrix[i][j - 1] + 1,
+                        matrix[i - 1][j - 1] + cost
+                    );
+                }
+            }
+            
+            const distance = matrix[len1][len2];
+            return 1 - distance / Math.max(len1, len2);
+        }
+
+        // 計算發音相似度
+        function calculatePronunciationSimilarity(str1, str2) {
+            let matches = 0;
+            let total = 0;
+            
+            const chars1 = Array.from(str1);
+            const chars2 = Array.from(str2);
+            
+            for (let i = 0; i < Math.min(chars1.length, chars2.length); i++) {
+                total++;
+                const char1 = chars1[i];
+                const char2 = chars2[i];
+                
+                if (char1 === char2) {
+                    matches++;
+                } else if (arePronunciationSimilar(char1, char2)) {
+                    matches += 0.8; // 同音字給較高分數
+                }
+            }
+            
+            // 考慮長度差異
+            const lengthPenalty = Math.abs(chars1.length - chars2.length) * 0.1;
+            return total > 0 ? Math.max(0, (matches / total) - lengthPenalty) : 0;
+        }
+
+        // 檢查兩個字符是否發音相似
+        function arePronunciationSimilar(char1, char2) {
+            for (const [key, variants] of Object.entries(chinesePronunciationMap)) {
+                if ((char1 === key && variants.includes(char2)) ||
+                    (char2 === key && variants.includes(char1)) ||
+                    (variants.includes(char1) && variants.includes(char2))) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // 計算關鍵詞匹配度
+        function calculateKeywordMatch(text, candidate, keywords) {
+            let score = 0;
+            let keywordFound = 0;
+            
+            for (const keyword of keywords) {
+                if (keyword.length < 2) continue;
+                
+                const textContains = text.includes(keyword);
+                const candidateContains = candidate.includes(keyword);
+                
+                if (textContains && candidateContains) {
+                    score += keyword.length / Math.max(text.length, candidate.length);
+                    keywordFound++;
+                } else if (textContains || candidateContains) {
+                    // 部分匹配的懲罰
+                    score -= 0.1;
+                }
+            }
+            
+            return keywordFound > 0 ? score : 0;
+        }
+
+        // 計算長度相似度
+        function calculateLengthSimilarity(str1, str2) {
+            const len1 = str1.length;
+            const len2 = str2.length;
+            
+            if (len1 === 0 && len2 === 0) return 1;
+            if (len1 === 0 || len2 === 0) return 0;
+            
+            const ratio = Math.min(len1, len2) / Math.max(len1, len2);
+            return ratio;
+        }
+
+        async function processFiles() {
+            try {
+                document.getElementById('progressSection').style.display = 'block';
+                updateProgress(10, '解析字幕文件...');
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                originalSubtitles = parseSRTSubtitles(subtitleContent);
+                updateProgress(30, '解析劇本內容...');
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                const scriptLines = scriptContent.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+                updateProgress(50, '比對和修正字幕...');
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                correctedSubtitles = [];
+                correctionReport = [];
+                
+                for (let i = 0; i < originalSubtitles.length; i++) {
+                    const originalSub = originalSubtitles[i];
+                    const correctedText = findBestMatch(originalSub.text, scriptLines);
+                    
+                    correctedSubtitles.push({
+                        id: originalSub.id,
+                        timeRange: originalSub.timeRange,
+                        text: correctedText
+                    });
+                    
+                    if (originalSub.text !== correctedText) {
+                        correctionReport.push({
+                            id: originalSub.id,
+                            timeRange: originalSub.timeRange,
+                            original: originalSub.text,
+                            corrected: correctedText
+                        });
+                    }
+                    
+                    updateProgress(50 + (i / originalSubtitles.length) * 40, `修正字幕 ${i + 1}/${originalSubtitles.length}`);
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
+                
+                updateProgress(95, '生成預覽...');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                displayResults();
+                updateProgress(100, '處理完成！');
+                
+                setTimeout(() => {
+                    document.getElementById('progressSection').style.display = 'none';
+                    document.getElementById('resultSection').style.display = 'block';
+                    showMessage(`處理完成！共修正了 ${correctionReport.length} 處字幕內容。`, 'success');
+                }, 1000);
+                
+            } catch (error) {
+                console.error('處理過程中發生錯誤:', error);
+                showMessage('處理過程中發生錯誤: ' + error.message, 'error');
+                document.getElementById('progressSection').style.display = 'none';
+            }
+        }
+
+        function displayResults() {
+            const originalPreview = document.getElementById('originalPreview');
+            const correctedPreview = document.getElementById('correctedPreview');
+            
+            const originalSRT = generateSRTContent(originalSubtitles);
+            const correctedSRT = generateSRTContent(correctedSubtitles);
+            
+            originalPreview.textContent = originalSRT.substring(0, 1000) + (originalSRT.length > 1000 ? '\n...' : '');
+            correctedPreview.textContent = correctedSRT.substring(0, 1000) + (correctedSRT.length > 1000 ? '\n...' : '');
+        }
+
+        function downloadCorrectedSubtitle() {
+            const correctedSRT = generateSRTContent(correctedSubtitles);
+            downloadFile(correctedSRT, 'corrected_subtitle.srt', 'text/plain;charset=utf-8');
+        }
+
+        function downloadReport() {
+            let reportContent = '字幕修正報告\n';
+            reportContent += '=================\n\n';
+            reportContent += `處理時間: ${new Date().toLocaleString()}\n`;
+            reportContent += `總字幕數: ${originalSubtitles.length}\n`;
+            reportContent += `修正數量: ${correctionReport.length}\n\n`;
+            
+            if (correctionReport.length > 0) {
+                reportContent += '修正詳情:\n';
+                reportContent += '---------\n\n';
+                
+                correctionReport.forEach(item => {
+                    reportContent += `字幕 ${item.id} (${item.timeRange}):\n`;
+                    reportContent += `原文: ${item.original}\n`;
+                    reportContent += `修正: ${item.corrected}\n\n`;
+                });
+            } else {
+                reportContent += '未發現需要修正的字幕內容。\n';
+            }
+            
+            downloadFile(reportContent, 'correction_report.txt', 'text/plain;charset=utf-8');
+        }
+
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
