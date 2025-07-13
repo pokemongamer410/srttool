@@ -43,29 +43,7 @@
 - `angel` → `天使`
 - 更多語音識別錯誤...
 
-## 🔍 如何查看網址
 
-### 方法一：GitHub Pages 設定頁面
-1. 進入 [GitHub Repository](https://github.com/pokemongamer410/srttool)
-2. 點擊 `Settings` 標籤
-3. 在左側選單點擊 `Pages`
-4. 在頁面上方會顯示你的網站 URL
-
-### 方法二：GitHub Repository 主頁
-1. 進入 [GitHub Repository](https://github.com/pokemongamer410/srttool)
-2. 在右側 "About" 區域會顯示網站連結（如果有設定的話）
-
-### 方法三：記住格式
-```
-https://你的用戶名.github.io/repo名稱/
-https://pokemongamer410.github.io/srttool/
-```
-
-## 📝 開發說明
-
-本工具使用純 HTML、CSS、JavaScript 開發，無需額外依賴，可直接在瀏覽器中運行。
-
-## 📄 授權
 
 本專案使用 MIT 授權條款。
 
